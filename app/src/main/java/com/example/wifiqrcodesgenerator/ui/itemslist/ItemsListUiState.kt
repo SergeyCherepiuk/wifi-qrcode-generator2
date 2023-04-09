@@ -11,6 +11,5 @@ data class ItemUiState(
 fun ItemUiState.toBitmap(): Bitmap = QRCodeGenerator.generate(this.ssid, this.password)
 
 data class ItemsListUiState(
-	val items: List<ItemUiState> = emptyList(),
-	val currentPageIndex: Int = 0
+	val items: List<ItemUiState> = emptyList()
 )

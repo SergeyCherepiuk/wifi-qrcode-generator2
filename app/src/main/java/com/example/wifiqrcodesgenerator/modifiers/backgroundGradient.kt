@@ -9,6 +9,7 @@ import com.example.wifiqrcodesgenerator.ui.theme.Orange
 import com.example.wifiqrcodesgenerator.ui.theme.Red
 import kotlin.math.*
 
+// Credits: https://stackoverflow.com/a/68223861
 fun Modifier.gradientBackground(
 	colors: List<Color> = listOf(Red, Orange),
 	angle: Float = 45f

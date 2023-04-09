@@ -3,16 +3,18 @@ package com.example.wifiqrcodesgenerator.ui.itemslist
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,34 +26,65 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import com.example.wifiqrcodesgenerator.modifiers.advancedShadow
 import com.example.wifiqrcodesgenerator.modifiers.gradientBackground
+import com.example.wifiqrcodesgenerator.navigation.Destinations
 import com.example.wifiqrcodesgenerator.ui.theme.Orange
 import com.example.wifiqrcodesgenerator.ui.theme.Red
-import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
 import java.lang.Integer.min
-import java.lang.Math.max
+import java.lang.Integer.max
 
-@OptIn(ExperimentalPagerApi::class)
+fun NavGraphBuilder.itemsList(
+	navController: NavController,
+	viewModel: ItemsListViewModel
+) {
+	composable(Destinations.ITEMS_LIST_ROUTE) {
+		val uiState by viewModel.uiState.collectAsState()
+		ItemsListScreen(
+			uiState = uiState,
+			addItem = viewModel::addItem,
+			updateItem = viewModel::updateItem,
+			deleteItem = viewModel::deleteItem,
+			navigateToReorderItems = navController::navigateToReorderItems
+		)
+	}
+}
+
+fun NavController.navigateToItemsListScreen() {
+	navigate(Destinations.ITEMS_LIST_ROUTE) {
+		launchSingleTop = true
+	}
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ItemsListScreen(
 	uiState: ItemsListUiState,
 	addItem: () -> Unit,
 	updateItem: (ItemUiState, String, String) -> Unit,
 	deleteItem: (ItemUiState) -> Unit,
+	navigateToReorderItems: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	Box(modifier = modifier.fillMaxSize()) {
-		val state by remember { mutableStateOf(PagerState()) }
+		val pagerState = rememberPagerState()
+		LaunchedEffect(pagerState.currentPageOffsetFraction) {
+			Log.d("qweasd", "ItemsListScreen: ${pagerState.currentPageOffsetFraction}")
+		}
 		HorizontalPager(
-			count = uiState.items.size,
-			state = state
+			pageCount = uiState.items.size,
+			state = pagerState
 		) { pageIndex ->
 			QRCodePage(
 				item = uiState.items[pageIndex],
@@ -60,21 +93,16 @@ fun ItemsListScreen(
 			)
 		}
 		DotIndicators(
-			itemsCount = state.pageCount,
-			currentPageIndex = state.currentPage,
+			itemsCount = uiState.items.size,
+			currentPageIndex = pagerState.currentPage,
 			modifier = Modifier.align(Alignment.BottomCenter)
 		)
-		FloatingActionButton(
-			onClick = addItem,
-			modifier = Modifier
-				.align(Alignment.BottomEnd)
-				.padding(24.dp)
-		) {
-			Icon(
-				imageVector = Icons.Default.Add,
-				contentDescription = null
-			)
-		}
+		FloatingActionButtons(
+			itemsCount = uiState.items.size,
+			addItem = addItem,
+			navigateToReorderItems = navigateToReorderItems,
+			modifier = Modifier.align(Alignment.BottomEnd)
+		)
 	}
 }
 
@@ -175,6 +203,8 @@ fun QRCodePageContent(
 			text = item.ssid,
 			fontSize = 24.sp,
 			fontWeight = FontWeight.Medium,
+			maxLines = 1,
+			overflow = TextOverflow.Ellipsis,
 			modifier = Modifier.padding(28.dp)
 		)
 		ButtonsRow(
@@ -237,16 +267,30 @@ private fun TextFields(
 			OutlinedTextField(
 				value = ssid,
 				onValueChange = updateSsid,
-				label = { Text("ssid") },
+				maxLines = 1,
+				label = { Text("SSID") },
 				shape = RoundedCornerShape(20.dp),
-				modifier = Modifier.padding(10.dp)
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(10.dp),
 			)
+			var isPasswordVisible by remember { mutableStateOf(false) }
 			OutlinedTextField(
 				value = password,
 				onValueChange = updatePassword,
-				label = { Text("password") },
+				maxLines = 1,
+				label = { Text("Password") },
 				shape = RoundedCornerShape(20.dp),
-				modifier = Modifier.padding(10.dp)
+				trailingIcon = { Icon(
+					imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+					contentDescription = null,
+					modifier = Modifier.clickable { isPasswordVisible = !isPasswordVisible }
+				) },
+				visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+				keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(10.dp)
 			)
 		}
 	}
@@ -390,43 +434,77 @@ private fun DotIndicators(
 	modifier: Modifier = Modifier
 ) {
 	Row(modifier = modifier.padding(20.dp)) {
-		// ???
 		val startIndex = max(0, min(currentPageIndex-2, itemsCount-5))
 		val endIndex = min(itemsCount-1, max(currentPageIndex+2, 4))
-		Log.d("asdqwe", "DotIndicators: $startIndex, $endIndex, $currentPageIndex")
-		(0 until itemsCount)
-			.toList()
-			.slice(startIndex..endIndex)
-			.forEach {
-				val color = animateColorAsState(
-					targetValue = if (it == currentPageIndex) Color.White else Color.Gray,
-					animationSpec = tween(
-						durationMillis = 300,
-						easing = LinearEasing
-					)
+		(startIndex..endIndex).forEach {
+			val color = animateColorAsState(
+				targetValue = if (it == currentPageIndex) Color.White else Color.Gray,
+				animationSpec = tween(
+					durationMillis = 300,
+					easing = LinearEasing
 				)
-				val width = animateDpAsState(
-					targetValue = if (it == currentPageIndex) 18.dp else 6.dp,
-					animationSpec = tween(
-						durationMillis = 150,
-						easing = LinearEasing
-					)
+			)
+			val width = animateDpAsState(
+				targetValue = if (it == currentPageIndex) 18.dp else 6.dp,
+				animationSpec = tween(
+					durationMillis = 150,
+					easing = LinearEasing
 				)
-				Box(modifier = Modifier
+			)
+			Box(
+				modifier = Modifier
 					.padding(horizontal = 6.dp)
 					.size(height = 6.dp, width = width.value)
 					.clip(CircleShape)
 					.background(color.value)
-				)
-			}
+			)
+		}
 	}
 }
 
-@Preview
+@Preview(
+	showBackground = true,
+	uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 private fun DotIndicatorsPreview() {
 	DotIndicators(
 		itemsCount = 5,
 		currentPageIndex = 3
 	)
+}
+
+@Composable
+private fun FloatingActionButtons(
+	itemsCount: Int,
+	addItem: () -> Unit,
+	navigateToReorderItems: () -> Unit,
+	modifier: Modifier = Modifier,
+) {
+	Column(modifier = modifier) {
+		AnimatedVisibility(
+			visible = itemsCount > 1,
+			enter = slideInHorizontally { it },
+			exit = slideOutHorizontally { it }
+		) {
+			FloatingActionButton(
+				onClick = navigateToReorderItems,
+				modifier = Modifier.padding(end = 24.dp, bottom = 24.dp)
+			) {
+				Icon(
+					imageVector = Icons.Default.Reorder,
+					contentDescription = null
+				)
+			}
+		}
+		FloatingActionButton(
+			onClick = addItem,
+			modifier = Modifier.padding(end = 24.dp, bottom = 24.dp)
+		) {
+			Icon(
+				imageVector = Icons.Default.Add,
+				contentDescription = null
+			)
+		}
+	}
 }

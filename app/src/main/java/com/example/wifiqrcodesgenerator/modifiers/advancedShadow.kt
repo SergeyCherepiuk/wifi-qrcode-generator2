@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+// Credits: https://stackoverflow.com/a/69007312
 fun Modifier.advancedShadow(
 	color: Color = Color.Black,
 	alpha: Float = 1f,

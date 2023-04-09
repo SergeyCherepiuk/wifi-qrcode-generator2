@@ -45,4 +45,12 @@ class ItemsListViewModel : ViewModel() {
 			items = items
 		) }
 	}
+
+	fun reorderItems(from: Int, to: Int) {
+		val items = _uiState.value.items.toMutableList()
+		items[from] = items[to].also { items[to] = items[from] }
+		_uiState.update { it.copy(
+			items = items
+		) }
+	}
 }
