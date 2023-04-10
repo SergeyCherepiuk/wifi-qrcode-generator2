@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ fun NavGraphBuilder.reorderItems(
 		ReorderItemsScreen(
 			uiState = uiState,
 			reorderItems = viewModel::reorderItems,
+			submitReorderItems = viewModel::submitReorderItems,
 			navigateUp = navController::navigateUp
 		)
 	}
@@ -51,6 +53,7 @@ fun NavController.navigateToReorderItems() {
 fun ReorderItemsScreen(
 	uiState: ItemsListUiState,
 	reorderItems: (Int, Int) -> Unit,
+	submitReorderItems: () -> Unit,
 	navigateUp: () -> Unit
 ) {
 	Box {
@@ -67,16 +70,22 @@ fun ReorderItemsScreen(
 				ReorderableItem(
 					reorderableState = reorderableState,
 					key = System.identityHashCode(item)
-				) {
+				) {isDragging ->
+					val alpha = if (isDragging) 0.7f else 1f
 					ItemRow(
 						item = item,
-						modifier = Modifier.detectReorder(reorderableState)
+						modifier = Modifier
+							.detectReorder(reorderableState)
+							.alpha(alpha)
 					)
 				}
 			}
 		}
 		FloatingActionButton(
-			onClick = navigateUp,
+			onClick = {
+				submitReorderItems()
+				navigateUp()
+			},
 			modifier = Modifier
 				.padding(end = 24.dp, bottom = 24.dp)
 				.align(Alignment.BottomEnd)
@@ -113,6 +122,7 @@ private fun ReorderItemsScreenPreview() {
 			)
 		),
 		reorderItems = { _, _ -> },
+		submitReorderItems = {  },
 		navigateUp = {  }
 	)
 }

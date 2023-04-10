@@ -67,7 +67,7 @@ fun NavController.navigateToItemsList() {
 @Composable
 fun ItemsListScreen(
 	uiState: ItemsListUiState,
-	updateItem: (ItemUiState, String, String) -> Unit,
+	updateItem: (ItemUiState) -> Unit,
 	deleteItem: (ItemUiState) -> Unit,
 	navigateToReorderItems: () -> Unit,
 	navigateToAddItem: () -> Unit,
@@ -106,7 +106,7 @@ fun ItemsListScreen(
 private fun QRCodePage(
 	item: ItemUiState,
 	modifier: Modifier = Modifier,
-	updateItem: (ItemUiState, String, String) -> Unit,
+	updateItem: (ItemUiState) -> Unit,
 	deleteItem: (ItemUiState) -> Unit
 ) {
 	var ssid by remember { mutableStateOf(item.ssid) }
@@ -148,7 +148,7 @@ private fun QRCodePagePreview() {
 			ssid = "asdkoda-wifi",
 			password = "secret"
 		),
-		updateItem = { _, _, _ -> },
+		updateItem = {  },
 		deleteItem = {  }
 	)
 }
@@ -158,7 +158,7 @@ fun QRCodePageContent(
 	item: ItemUiState,
 	isInEditingMode: Boolean,
 	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState, String, String) -> Unit,
+	updateItem: (ItemUiState) -> Unit,
 	textFieldSsid: String,
 	textFieldPassword: String,
 	deleteItem: (ItemUiState) -> Unit,
@@ -225,7 +225,7 @@ private fun QRCodePageContentPreview() {
 		),
 		isInEditingMode = true,
 		toggleEditingMode = {  },
-		updateItem = { _, _, _ -> },
+		updateItem = {  },
 		textFieldSsid = "new-asdkoda-wifi",
 		textFieldPassword = "new-secret",
 		deleteItem = {  }
@@ -289,7 +289,7 @@ private fun ButtonsRow(
 	modifier: Modifier = Modifier,
 	isInEditingMode: Boolean = false,
 	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState, String, String) -> Unit,
+	updateItem: (ItemUiState) -> Unit,
 	textFieldSsid: String,
 	textFieldPassword: String,
 	deleteItem: (ItemUiState) -> Unit
@@ -302,7 +302,7 @@ private fun ButtonsRow(
 			onClick = {
 				val isDifferent: Boolean = item.ssid != textFieldSsid || item.password != textFieldPassword
 				if (isInEditingMode && isDifferent) {
-					updateItem(item, textFieldSsid, textFieldPassword)
+					updateItem(item)
 				}
 				toggleEditingMode()
 			}
@@ -339,7 +339,7 @@ private fun ButtonsRowPreview() {
 			password = "secret"
 		),
 		toggleEditingMode = {  },
-		updateItem = { _, _, _ -> },
+		updateItem = {  },
 		textFieldSsid = "new-asdkoda-wifi",
 		textFieldPassword = "new-secret",
 		deleteItem = {  }
