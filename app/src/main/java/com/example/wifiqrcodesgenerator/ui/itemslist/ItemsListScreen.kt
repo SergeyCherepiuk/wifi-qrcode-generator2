@@ -8,13 +8,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,9 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -40,6 +35,7 @@ import androidx.navigation.compose.composable
 import com.example.wifiqrcodesgenerator.modifiers.advancedShadow
 import com.example.wifiqrcodesgenerator.modifiers.gradientBackground
 import com.example.wifiqrcodesgenerator.navigation.Destinations
+import com.example.wifiqrcodesgenerator.ui.components.TextFields
 import com.example.wifiqrcodesgenerator.ui.theme.Orange
 import com.example.wifiqrcodesgenerator.ui.theme.Red
 import java.lang.Integer.min
@@ -53,15 +49,15 @@ fun NavGraphBuilder.itemsList(
 		val uiState by viewModel.uiState.collectAsState()
 		ItemsListScreen(
 			uiState = uiState,
-			addItem = viewModel::addItem,
 			updateItem = viewModel::updateItem,
 			deleteItem = viewModel::deleteItem,
-			navigateToReorderItems = navController::navigateToReorderItems
+			navigateToReorderItems = navController::navigateToReorderItems,
+			navigateToAddItem = navController::navigateToAddItem
 		)
 	}
 }
 
-fun NavController.navigateToItemsListScreen() {
+fun NavController.navigateToItemsList() {
 	navigate(Destinations.ITEMS_LIST_ROUTE) {
 		launchSingleTop = true
 	}
@@ -71,10 +67,10 @@ fun NavController.navigateToItemsListScreen() {
 @Composable
 fun ItemsListScreen(
 	uiState: ItemsListUiState,
-	addItem: () -> Unit,
 	updateItem: (ItemUiState, String, String) -> Unit,
 	deleteItem: (ItemUiState) -> Unit,
 	navigateToReorderItems: () -> Unit,
+	navigateToAddItem: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	Box(modifier = modifier.fillMaxSize()) {
@@ -99,8 +95,8 @@ fun ItemsListScreen(
 		)
 		FloatingActionButtons(
 			itemsCount = uiState.items.size,
-			addItem = addItem,
 			navigateToReorderItems = navigateToReorderItems,
+			navigateToAddItem = navigateToAddItem,
 			modifier = Modifier.align(Alignment.BottomEnd)
 		)
 	}
@@ -120,7 +116,7 @@ private fun QRCodePage(
 	var isInEditingMode by remember { mutableStateOf(false) }
 	val toggleEditingMode = { isInEditingMode = !isInEditingMode }
 	Box(modifier = modifier.fillMaxSize()) {
-		TextFields(
+		AnimatedTextFields(
 			ssid = ssid,
 			updateSsid = updateSsid,
 			password = password,
@@ -237,7 +233,7 @@ private fun QRCodePageContentPreview() {
 }
 
 @Composable
-private fun TextFields(
+private fun AnimatedTextFields(
 	ssid: String,
 	updateSsid: (String) -> Unit,
 	password: String,
@@ -263,36 +259,12 @@ private fun TextFields(
 		),
 		modifier = modifier
 	) {
-		Column {
-			OutlinedTextField(
-				value = ssid,
-				onValueChange = updateSsid,
-				maxLines = 1,
-				label = { Text("SSID") },
-				shape = RoundedCornerShape(20.dp),
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(10.dp),
-			)
-			var isPasswordVisible by remember { mutableStateOf(false) }
-			OutlinedTextField(
-				value = password,
-				onValueChange = updatePassword,
-				maxLines = 1,
-				label = { Text("Password") },
-				shape = RoundedCornerShape(20.dp),
-				trailingIcon = { Icon(
-					imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-					contentDescription = null,
-					modifier = Modifier.clickable { isPasswordVisible = !isPasswordVisible }
-				) },
-				visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-				keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(10.dp)
-			)
-		}
+		TextFields(
+			ssid = ssid,
+			updateSsid = updateSsid,
+			password = password,
+			updatePassword = updatePassword
+		)
 	}
 }
 
@@ -301,8 +273,8 @@ private fun TextFields(
 	uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-private fun TextFieldsPreview() {
-	TextFields(
+private fun AnimatedTextFieldsPreview() {
+	AnimatedTextFields(
 		ssid = "asdkoda-wifi",
 		updateSsid = {  },
 		password = "secret",
@@ -477,8 +449,8 @@ private fun DotIndicatorsPreview() {
 @Composable
 private fun FloatingActionButtons(
 	itemsCount: Int,
-	addItem: () -> Unit,
 	navigateToReorderItems: () -> Unit,
+	navigateToAddItem: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	Column(modifier = modifier) {
@@ -498,7 +470,7 @@ private fun FloatingActionButtons(
 			}
 		}
 		FloatingActionButton(
-			onClick = addItem,
+			onClick = navigateToAddItem,
 			modifier = Modifier.padding(end = 24.dp, bottom = 24.dp)
 		) {
 			Icon(

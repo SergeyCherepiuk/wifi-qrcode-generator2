@@ -10,11 +10,14 @@ class ItemsListViewModel : ViewModel() {
 	private val _uiState = MutableStateFlow(ItemsListUiState())
 	val uiState: StateFlow<ItemsListUiState> = _uiState.asStateFlow()
 
-	fun addItem() {
+	fun addItem(
+		ssid: String,
+        password: String
+	) {
 		val items = _uiState.value.items.toMutableList()
 		val item = ItemUiState(
-			ssid = java.util.UUID.randomUUID().toString().slice(1..10),
-			password = java.util.UUID.randomUUID().toString().slice(1..10)
+			ssid = ssid,
+			password = password
 		)
 		items.add(item)
 		_uiState.update { it.copy(

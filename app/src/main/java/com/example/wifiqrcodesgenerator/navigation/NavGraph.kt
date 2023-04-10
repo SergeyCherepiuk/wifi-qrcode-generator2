@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.wifiqrcodesgenerator.ui.itemslist.ItemsListViewModel
+import com.example.wifiqrcodesgenerator.ui.itemslist.addItem
 import com.example.wifiqrcodesgenerator.ui.itemslist.itemsList
 import com.example.wifiqrcodesgenerator.ui.itemslist.reorderItems
 import com.example.wifiqrcodesgenerator.ui.theme.WifiQRCodesGeneratorTheme
@@ -29,6 +30,10 @@ fun NavGraph(navController: NavHostController) {
 					viewModel = itemsListViewModel
 				)
 				reorderItems(
+					navController = navController,
+					viewModel = itemsListViewModel
+				)
+				addItem(
 					navController = navController,
 					viewModel = itemsListViewModel
 				)

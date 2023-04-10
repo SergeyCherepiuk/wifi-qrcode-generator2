@@ -18,3 +18,4 @@ class MainActivity : ComponentActivity() {
 
 // TODO: Share the image of the QR code using implicit intent
 // TODO: Improve dots indicator for pager
+// TODO: Create "no items" screen

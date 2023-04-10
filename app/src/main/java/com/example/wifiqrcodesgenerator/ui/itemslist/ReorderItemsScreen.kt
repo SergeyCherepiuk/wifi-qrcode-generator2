@@ -61,12 +61,12 @@ fun ReorderItemsScreen(
 			state = reorderableState.listState,
 			modifier = Modifier
 				.fillMaxSize()
-				.reorderable(reorderableState),
+				.reorderable(reorderableState)
 		) {
-			items(uiState.items, { it.hashCode() }) { item ->
+			items(uiState.items, { System.identityHashCode(it) }) { item ->
 				ReorderableItem(
 					reorderableState = reorderableState,
-					key = item.hashCode()
+					key = System.identityHashCode(item)
 				) {
 					ItemRow(
 						item = item,
