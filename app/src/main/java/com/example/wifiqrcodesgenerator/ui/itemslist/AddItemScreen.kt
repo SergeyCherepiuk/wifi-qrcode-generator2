@@ -53,15 +53,15 @@ fun AddItemScreen(
 			password = password,
 			updatePassword = updatePassword
 		)
-		val action: () -> Unit = if (ssid.isNotEmpty()) {
+		val action: () -> Unit = if (ssid.isNotBlank()) {
 			{
-				addItem(ssid, password)
+				addItem(ssid.trim(), password.trim())
 				navigateUp()
 			}
 		} else {
 			navigateUp
 		}
-		val icon = if (ssid.isNotEmpty()) Icons.Default.Check else Icons.Default.ArrowBack
+		val icon = if (ssid.isNotBlank()) Icons.Default.Check else Icons.Default.ArrowBack
 		FloatingActionButton(
 			onClick = action,
 			modifier = Modifier

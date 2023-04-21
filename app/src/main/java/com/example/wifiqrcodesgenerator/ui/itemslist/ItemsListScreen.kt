@@ -2,7 +2,6 @@ package com.example.wifiqrcodesgenerator.ui.itemslist
 
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -75,9 +74,6 @@ fun ItemsListScreen(
 ) {
 	Box(modifier = modifier.fillMaxSize()) {
 		val pagerState = rememberPagerState()
-		LaunchedEffect(pagerState.currentPageOffsetFraction) {
-			Log.d("qweasd", "ItemsListScreen: ${pagerState.currentPageOffsetFraction}")
-		}
 		HorizontalPager(
 			pageCount = uiState.items.size,
 			state = pagerState
@@ -169,7 +165,8 @@ fun QRCodePageContent(
 		animationSpec = tween(
 			durationMillis = 150,
 			easing = EaseOut
-		)
+		),
+		label = "paddingTop"
 	)
 	Column(
 		horizontalAlignment = Alignment.CenterHorizontally,
@@ -182,7 +179,8 @@ fun QRCodePageContent(
 			animationSpec = infiniteRepeatable(
 				animation = tween(durationMillis = 5000),
 				repeatMode = RepeatMode.Reverse
-			)
+			),
+			label = "shadowBlur"
 		)
 		val cornerRadius: Dp = 75.dp
 		QRCodeImage(
@@ -201,7 +199,8 @@ fun QRCodePageContent(
 			fontWeight = FontWeight.Medium,
 			maxLines = 1,
 			overflow = TextOverflow.Ellipsis,
-			modifier = Modifier.padding(28.dp)
+			modifier = Modifier
+				.padding(28.dp)
 		)
 		ButtonsRow(
 			item = item,
@@ -302,7 +301,12 @@ private fun ButtonsRow(
 			onClick = {
 				val isDifferent: Boolean = item.ssid != textFieldSsid || item.password != textFieldPassword
 				if (isInEditingMode && isDifferent) {
-					updateItem(item)
+					updateItem(
+						item.copy(
+							ssid = textFieldSsid.trim(),
+							password = textFieldPassword.trim()
+						)
+					)
 				}
 				toggleEditingMode()
 			}
@@ -312,7 +316,12 @@ private fun ButtonsRow(
 				contentDescription = null
 			)
 		}
-		ElevatedButton(onClick = { deleteItem(item) }) {
+		ElevatedButton(onClick = {
+			if (isInEditingMode) {
+				toggleEditingMode()
+			}
+			deleteItem(item)
+		}) {
 			Icon(
 				imageVector = Icons.Default.Delete,
 				contentDescription = null
@@ -362,7 +371,8 @@ private fun QRCodeImage(
 		animationSpec = infiniteRepeatable(
 			animation = tween(durationMillis = 10000),
 			repeatMode = RepeatMode.Restart
-		)
+		),
+		label = "gradientAngle"
 	)
 	Box(
 		modifier = modifier
@@ -414,14 +424,17 @@ private fun DotIndicators(
 				animationSpec = tween(
 					durationMillis = 300,
 					easing = LinearEasing
-				)
+				),
+				label = "pagerIndicatorColor"
 			)
 			val width = animateDpAsState(
 				targetValue = if (it == currentPageIndex) 18.dp else 6.dp,
 				animationSpec = tween(
 					durationMillis = 150,
 					easing = LinearEasing
-				)
+				),
+				label = "pagerIndicatorWidth"
+
 			)
 			Box(
 				modifier = Modifier

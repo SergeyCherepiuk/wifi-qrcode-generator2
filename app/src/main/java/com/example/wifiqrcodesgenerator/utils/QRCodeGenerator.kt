@@ -6,6 +6,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
 
+// Credits: https://stackoverflow.com/a/64504871
 object QRCodeGenerator {
 	fun generate(ssid: String, password: String): Bitmap {
 		val writer = QRCodeWriter()

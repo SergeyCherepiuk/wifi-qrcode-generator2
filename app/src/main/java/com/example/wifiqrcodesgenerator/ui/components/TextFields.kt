@@ -33,7 +33,7 @@ fun TextFields(
 		OutlinedTextField(
 			value = ssid,
 			onValueChange = updateSsid,
-			maxLines = 1,
+			singleLine = true,
 			label = { Text("SSID") },
 			shape = RoundedCornerShape(20.dp),
 			modifier = Modifier
@@ -44,7 +44,7 @@ fun TextFields(
 		OutlinedTextField(
 			value = password,
 			onValueChange = updatePassword,
-			maxLines = 1,
+			singleLine = true,
 			label = { Text("Password") },
 			shape = RoundedCornerShape(20.dp),
 			trailingIcon = { Icon(
