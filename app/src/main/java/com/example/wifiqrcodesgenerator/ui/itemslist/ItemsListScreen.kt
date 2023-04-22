@@ -1,5 +1,6 @@
 package com.example.wifiqrcodesgenerator.ui.itemslist
 
+import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.animation.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,8 +39,8 @@ import com.example.wifiqrcodesgenerator.navigation.Destinations
 import com.example.wifiqrcodesgenerator.ui.components.TextFields
 import com.example.wifiqrcodesgenerator.ui.theme.Orange
 import com.example.wifiqrcodesgenerator.ui.theme.Red
-import java.lang.Integer.min
 import java.lang.Integer.max
+import java.lang.Integer.min
 
 fun NavGraphBuilder.itemsList(
 	navController: NavController,
@@ -50,6 +52,7 @@ fun NavGraphBuilder.itemsList(
 			uiState = uiState,
 			updateItem = viewModel::updateItem,
 			deleteItem = viewModel::deleteItem,
+			shareImage = viewModel::shareImage,
 			navigateToReorderItems = navController::navigateToReorderItems,
 			navigateToAddItem = navController::navigateToAddItem
 		)
@@ -66,8 +69,9 @@ fun NavController.navigateToItemsList() {
 @Composable
 fun ItemsListScreen(
 	uiState: ItemsListUiState,
-	updateItem: (ItemUiState) -> Unit,
+	updateItem: (ItemUiState, String, String) -> Unit,
 	deleteItem: (ItemUiState) -> Unit,
+	shareImage: (Context, ItemUiState) -> Unit,
 	navigateToReorderItems: () -> Unit,
 	navigateToAddItem: () -> Unit,
 	modifier: Modifier = Modifier
@@ -81,7 +85,8 @@ fun ItemsListScreen(
 			QRCodePage(
 				item = uiState.items[pageIndex],
 				updateItem = updateItem,
-				deleteItem = deleteItem
+				deleteItem = deleteItem,
+				shareImage = shareImage
 			)
 		}
 		DotIndicators(
@@ -102,8 +107,9 @@ fun ItemsListScreen(
 private fun QRCodePage(
 	item: ItemUiState,
 	modifier: Modifier = Modifier,
-	updateItem: (ItemUiState) -> Unit,
-	deleteItem: (ItemUiState) -> Unit
+	updateItem: (ItemUiState, String, String) -> Unit,
+	deleteItem: (ItemUiState) -> Unit,
+	shareImage: (Context, ItemUiState) -> Unit
 ) {
 	var ssid by remember { mutableStateOf(item.ssid) }
 	val updateSsid: (String) -> Unit = { value -> ssid = value }
@@ -128,6 +134,7 @@ private fun QRCodePage(
 			textFieldSsid = ssid,
 			textFieldPassword = password,
 			deleteItem = deleteItem,
+			shareImage = shareImage,
 			modifier = Modifier.align(Alignment.Center)
 		)
 	}
@@ -144,8 +151,9 @@ private fun QRCodePagePreview() {
 			ssid = "asdkoda-wifi",
 			password = "secret"
 		),
-		updateItem = {  },
-		deleteItem = {  }
+		updateItem = { _, _, _ ->  },
+		deleteItem = {  },
+		shareImage = { _, _ ->  }
 	)
 }
 
@@ -154,10 +162,11 @@ fun QRCodePageContent(
 	item: ItemUiState,
 	isInEditingMode: Boolean,
 	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState) -> Unit,
+	updateItem: (ItemUiState, String, String) -> Unit,
 	textFieldSsid: String,
 	textFieldPassword: String,
 	deleteItem: (ItemUiState) -> Unit,
+	shareImage: (Context, ItemUiState) -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	val paddingTop = animateDpAsState(
@@ -199,8 +208,7 @@ fun QRCodePageContent(
 			fontWeight = FontWeight.Medium,
 			maxLines = 1,
 			overflow = TextOverflow.Ellipsis,
-			modifier = Modifier
-				.padding(28.dp)
+			modifier = Modifier.padding(28.dp)
 		)
 		ButtonsRow(
 			item = item,
@@ -209,7 +217,8 @@ fun QRCodePageContent(
 			updateItem = updateItem,
 			textFieldSsid = textFieldSsid,
 			textFieldPassword = textFieldPassword,
-			deleteItem = deleteItem
+			deleteItem = deleteItem,
+			shareImage = shareImage
 		)
 	}
 }
@@ -224,10 +233,11 @@ private fun QRCodePageContentPreview() {
 		),
 		isInEditingMode = true,
 		toggleEditingMode = {  },
-		updateItem = {  },
+		updateItem = { _, _, _ ->  },
 		textFieldSsid = "new-asdkoda-wifi",
 		textFieldPassword = "new-secret",
-		deleteItem = {  }
+		deleteItem = {  },
+		shareImage = { _, _ ->  }
 	)
 }
 
@@ -288,29 +298,24 @@ private fun ButtonsRow(
 	modifier: Modifier = Modifier,
 	isInEditingMode: Boolean = false,
 	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState) -> Unit,
+	updateItem: (ItemUiState, String, String) -> Unit,
 	textFieldSsid: String,
 	textFieldPassword: String,
-	deleteItem: (ItemUiState) -> Unit
+	deleteItem: (ItemUiState) -> Unit,
+	shareImage: (Context, ItemUiState) -> Unit
 ) {
+	val context = LocalContext.current
 	Row(
 		horizontalArrangement = Arrangement.SpaceBetween,
 		modifier = modifier.width(250.dp)
 	) {
-		ElevatedButton(
-			onClick = {
+		ElevatedButton(onClick = {
 				val isDifferent: Boolean = item.ssid != textFieldSsid || item.password != textFieldPassword
 				if (isInEditingMode && isDifferent) {
-					updateItem(
-						item.copy(
-							ssid = textFieldSsid.trim(),
-							password = textFieldPassword.trim()
-						)
-					)
+					updateItem(item, textFieldSsid, textFieldPassword)
 				}
 				toggleEditingMode()
-			}
-		) {
+		}) {
 			Icon(
 				imageVector = if (isInEditingMode) Icons.Default.Check else Icons.Default.Edit,
 				contentDescription = null
@@ -327,7 +332,9 @@ private fun ButtonsRow(
 				contentDescription = null
 			)
 		}
-		ElevatedButton(onClick = { /*TODO*/ }) {
+		ElevatedButton(onClick = {
+			shareImage(context, item)
+		}) {
 			Icon(
 				imageVector = Icons.Default.Share,
 				contentDescription = null
@@ -348,10 +355,11 @@ private fun ButtonsRowPreview() {
 			password = "secret"
 		),
 		toggleEditingMode = {  },
-		updateItem = {  },
+		updateItem = { _, _, _ ->  },
 		textFieldSsid = "new-asdkoda-wifi",
 		textFieldPassword = "new-secret",
-		deleteItem = {  }
+		deleteItem = {  },
+		shareImage = { _, _ ->  }
 	)
 }
 

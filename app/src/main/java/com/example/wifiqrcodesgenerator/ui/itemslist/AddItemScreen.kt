@@ -55,7 +55,7 @@ fun AddItemScreen(
 		)
 		val action: () -> Unit = if (ssid.isNotBlank()) {
 			{
-				addItem(ssid.trim(), password.trim())
+				addItem(ssid, password)
 				navigateUp()
 			}
 		} else {
