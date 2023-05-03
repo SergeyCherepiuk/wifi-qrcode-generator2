@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Reorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -24,8 +25,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.example.wifiqrcodesgenerator.models.QRCode
 import com.example.wifiqrcodesgenerator.navigation.Destinations
 import com.example.wifiqrcodesgenerator.ui.theme.DarkGray
+import com.example.wifiqrcodesgenerator.ui.theme.WifiQRCodesGeneratorTheme
 import org.burnoutcrew.reorderable.*
 
 fun NavGraphBuilder.reorderItems(
@@ -104,32 +107,36 @@ fun ReorderItemsScreen(
 )
 @Composable
 private fun ReorderItemsScreenPreview() {
-	ReorderItemsScreen(
-		uiState = ItemsListUiState(
-			listOf(
-				ItemUiState(
-					ssid = "free-hotspot",
-					password = "asdf-fgg4"
+	WifiQRCodesGeneratorTheme {
+		Surface {
+			ReorderItemsScreen(
+				uiState = ItemsListUiState(
+					listOf(
+						QRCode(
+							ssid = "free-hotspot",
+							password = "asdf-fgg4"
+						),
+						QRCode(
+							ssid = "asdkoda-wifi",
+							password = "secret"
+						),
+						QRCode(
+							ssid = "public-wifi",
+							password = ""
+						)
+					)
 				),
-				ItemUiState(
-					ssid = "asdkoda-wifi",
-					password = "secret"
-				),
-				ItemUiState(
-					ssid = "public-wifi",
-					password = ""
-				)
+				reorderItems = { _, _ -> },
+				submitReorderItems = { },
+				navigateUp = { }
 			)
-		),
-		reorderItems = { _, _ -> },
-		submitReorderItems = {  },
-		navigateUp = {  }
-	)
+		}
+	}
 }
 
 @Composable
 private fun ItemRow(
-	item: ItemUiState,
+	item: QRCode,
 	modifier: Modifier = Modifier
 ) {
 	Row(
@@ -160,10 +167,14 @@ private fun ItemRow(
 )
 @Composable
 private fun ItemRowPreview() {
-	ItemRow(
-		item = ItemUiState(
-			ssid = "asdkoda-wifi",
-			password = "secret"
-		)
-	)
+	WifiQRCodesGeneratorTheme {
+		Surface {
+			ItemRow(
+				item = QRCode(
+					ssid = "asdkoda-wifi",
+					password = "secret"
+				)
+			)
+		}
+	}
 }

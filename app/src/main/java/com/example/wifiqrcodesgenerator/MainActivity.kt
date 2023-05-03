@@ -5,10 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.rememberNavController
 import com.example.wifiqrcodesgenerator.navigation.NavGraph
+import com.example.wifiqrcodesgenerator.utils.ScreenResolution
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		ScreenResolution.windowManager = windowManager
 		setContent {
 			val navController = rememberNavController()
 			NavGraph(navController)

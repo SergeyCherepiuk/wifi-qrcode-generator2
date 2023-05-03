@@ -10,7 +10,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wifiqrcodesgenerator.database.AppDatabase
-import com.example.wifiqrcodesgenerator.utils.QRCodeGenerator
+import com.example.wifiqrcodesgenerator.models.QRCode
+import com.example.wifiqrcodesgenerator.utils.generateBitmap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,7 +39,7 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 	}
 
 	fun addItem(ssid: String, password: String) {
-		val item = ItemUiState(
+		val item = QRCode(
 			ssid = ssid.trim(),
 			password = password.trim()
 		)
@@ -50,7 +51,7 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	fun updateItem(item: ItemUiState, ssid: String, password: String) {
+	fun updateItem(item: QRCode, ssid: String, password: String) {
 		viewModelScope.launch {
 			database.itemDao().updateItem(item.copy(
 				ssid = ssid.trim(),
@@ -62,7 +63,7 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	fun deleteItem(item: ItemUiState) {
+	fun deleteItem(item: QRCode) {
 		viewModelScope.launch {
 			database.itemDao().deleteItem(item)
 			_uiState.update { it.copy(
@@ -90,8 +91,8 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 		}
 	}
 
-	fun shareImage(context: Context, item: ItemUiState) {
-		val bitmap: Bitmap = QRCodeGenerator.generate(item.ssid, item.password)
+	fun shareImage(context: Context, item: QRCode) {
+		val bitmap: Bitmap = generateBitmap(item.ssid, item.password)
 		val image = File(
 			Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
 			"/last-shared-image.jpg"

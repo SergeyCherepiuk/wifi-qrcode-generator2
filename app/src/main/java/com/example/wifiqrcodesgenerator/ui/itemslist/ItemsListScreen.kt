@@ -1,46 +1,38 @@
 package com.example.wifiqrcodesgenerator.ui.itemslist
 
 import android.content.Context
-import android.content.res.Configuration
-import android.graphics.Bitmap
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.example.wifiqrcodesgenerator.models.QRCode
+import com.example.wifiqrcodesgenerator.models.toBitmap
 import com.example.wifiqrcodesgenerator.modifiers.advancedShadow
-import com.example.wifiqrcodesgenerator.modifiers.gradientBackground
 import com.example.wifiqrcodesgenerator.navigation.Destinations
-import com.example.wifiqrcodesgenerator.ui.components.TextFields
-import com.example.wifiqrcodesgenerator.ui.theme.Orange
+import com.example.wifiqrcodesgenerator.ui.components.AnimatedTextFields
+import com.example.wifiqrcodesgenerator.ui.components.ElevatedButtonsRow
+import com.example.wifiqrcodesgenerator.ui.components.DotIndicators
+import com.example.wifiqrcodesgenerator.ui.components.FloatingActionButtonsColumn
+import com.example.wifiqrcodesgenerator.ui.components.QRCodeImage
 import com.example.wifiqrcodesgenerator.ui.theme.Red
-import java.lang.Integer.max
-import java.lang.Integer.min
+import com.example.wifiqrcodesgenerator.ui.theme.WifiQRCodesGeneratorTheme
 
 fun NavGraphBuilder.itemsList(
 	navController: NavController,
@@ -54,7 +46,8 @@ fun NavGraphBuilder.itemsList(
 			deleteItem = viewModel::deleteItem,
 			shareImage = viewModel::shareImage,
 			navigateToReorderItems = navController::navigateToReorderItems,
-			navigateToAddItem = navController::navigateToAddItem
+			navigateToAddItem = navController::navigateToAddItem,
+			modifier = Modifier.fillMaxSize()
 		)
 	}
 }
@@ -69,14 +62,14 @@ fun NavController.navigateToItemsList() {
 @Composable
 fun ItemsListScreen(
 	uiState: ItemsListUiState,
-	updateItem: (ItemUiState, String, String) -> Unit,
-	deleteItem: (ItemUiState) -> Unit,
-	shareImage: (Context, ItemUiState) -> Unit,
+	updateItem: (QRCode, String, String) -> Unit,
+	deleteItem: (QRCode) -> Unit,
+	shareImage: (Context, QRCode) -> Unit,
 	navigateToReorderItems: () -> Unit,
 	navigateToAddItem: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
-	Box(modifier = modifier.fillMaxSize()) {
+	Box(modifier = modifier) {
 		val pagerState = rememberPagerState()
 		HorizontalPager(
 			pageCount = uiState.items.size,
@@ -92,24 +85,56 @@ fun ItemsListScreen(
 		DotIndicators(
 			itemsCount = uiState.items.size,
 			currentPageIndex = pagerState.currentPage,
-			modifier = Modifier.align(Alignment.BottomCenter)
+			modifier = Modifier
+				.fillMaxSize()
+				.wrapContentSize(Alignment.BottomCenter)
+				.padding(20.dp)
 		)
-		FloatingActionButtons(
+		FloatingActionButtonsColumn(
 			itemsCount = uiState.items.size,
 			navigateToReorderItems = navigateToReorderItems,
 			navigateToAddItem = navigateToAddItem,
-			modifier = Modifier.align(Alignment.BottomEnd)
+			modifier = Modifier
+				.fillMaxSize()
+				.wrapContentSize(Alignment.BottomEnd)
+				.padding(end = 24.dp, bottom = 24.dp)
 		)
+	}
+}
+
+@Preview
+@Composable
+private fun ItemsListScreenPreview() {
+	WifiQRCodesGeneratorTheme {
+		Surface {
+			val uiState = ItemsListUiState(
+				items = listOf(
+					QRCode(
+						ssid = "asdkoda-wifi",
+						password = "secret"
+					)
+				)
+			)
+			ItemsListScreen(
+				uiState = uiState,
+				updateItem = { _, _, _ -> },
+				deleteItem = { },
+				shareImage = { _, _ -> },
+				navigateToReorderItems = {  },
+				navigateToAddItem = {  },
+				modifier = Modifier.fillMaxSize()
+			)
+		}
 	}
 }
 
 @Composable
 private fun QRCodePage(
-	item: ItemUiState,
+	item: QRCode,
 	modifier: Modifier = Modifier,
-	updateItem: (ItemUiState, String, String) -> Unit,
-	deleteItem: (ItemUiState) -> Unit,
-	shareImage: (Context, ItemUiState) -> Unit
+	updateItem: (QRCode, String, String) -> Unit,
+	deleteItem: (QRCode) -> Unit,
+	shareImage: (Context, QRCode) -> Unit,
 ) {
 	var ssid by remember { mutableStateOf(item.ssid) }
 	val updateSsid: (String) -> Unit = { value -> ssid = value }
@@ -117,386 +142,76 @@ private fun QRCodePage(
 	val updatePassword: (String) -> Unit = { value -> password = value }
 	var isInEditingMode by remember { mutableStateOf(false) }
 	val toggleEditingMode = { isInEditingMode = !isInEditingMode }
-	Box(modifier = modifier.fillMaxSize()) {
+	Box(modifier = modifier) {
 		AnimatedTextFields(
 			ssid = ssid,
 			updateSsid = updateSsid,
 			password = password,
 			updatePassword = updatePassword,
 			isInEditingMode = isInEditingMode,
-			modifier = Modifier.align(Alignment.TopCenter)
-		)
-		QRCodePageContent(
-			item = item,
-			isInEditingMode = isInEditingMode,
-			toggleEditingMode = toggleEditingMode,
-			updateItem = updateItem,
-			textFieldSsid = ssid,
-			textFieldPassword = password,
-			deleteItem = deleteItem,
-			shareImage = shareImage,
-			modifier = Modifier.align(Alignment.Center)
-		)
-	}
-}
-
-@Preview(
-	showBackground = true,
-	uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun QRCodePagePreview() {
-	QRCodePage(
-		item = ItemUiState(
-			ssid = "asdkoda-wifi",
-			password = "secret"
-		),
-		updateItem = { _, _, _ ->  },
-		deleteItem = {  },
-		shareImage = { _, _ ->  }
-	)
-}
-
-@Composable
-fun QRCodePageContent(
-	item: ItemUiState,
-	isInEditingMode: Boolean,
-	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState, String, String) -> Unit,
-	textFieldSsid: String,
-	textFieldPassword: String,
-	deleteItem: (ItemUiState) -> Unit,
-	shareImage: (Context, ItemUiState) -> Unit,
-	modifier: Modifier = Modifier
-) {
-	val paddingTop = animateDpAsState(
-		targetValue = if (isInEditingMode) 200.dp else 0.dp,
-		animationSpec = tween(
-			durationMillis = 150,
-			easing = EaseOut
-		),
-		label = "paddingTop"
-	)
-	Column(
-		horizontalAlignment = Alignment.CenterHorizontally,
-		modifier = modifier.padding(top = paddingTop.value)
-	) {
-		val infiniteTransition = rememberInfiniteTransition()
-		val shadowBlurRadius = infiniteTransition.animateFloat(
-			initialValue = 30f,
-			targetValue = 45f,
-			animationSpec = infiniteRepeatable(
-				animation = tween(durationMillis = 5000),
-				repeatMode = RepeatMode.Reverse
-			),
-			label = "shadowBlur"
-		)
-		val cornerRadius: Dp = 75.dp
-		QRCodeImage(
-			image = item.toBitmap(),
-			cornerRadius = cornerRadius,
-			modifier = Modifier.advancedShadow(
-				color = Red,
-				alpha = 0.75f,
-				cornersRadius = cornerRadius,
-				shadowBlurRadius = shadowBlurRadius.value.dp
-			)
-		)
-		Text(
-			text = item.ssid,
-			fontSize = 24.sp,
-			fontWeight = FontWeight.Medium,
-			maxLines = 1,
-			overflow = TextOverflow.Ellipsis,
-			modifier = Modifier.padding(28.dp)
-		)
-		ButtonsRow(
-			item = item,
-			isInEditingMode = isInEditingMode,
-			toggleEditingMode = toggleEditingMode,
-			updateItem = updateItem,
-			textFieldSsid = textFieldSsid,
-			textFieldPassword = textFieldPassword,
-			deleteItem = deleteItem,
-			shareImage = shareImage
-		)
-	}
-}
-
-@Preview
-@Composable
-private fun QRCodePageContentPreview() {
-	QRCodePageContent(
-		item = ItemUiState(
-			ssid = "asdkoda-wifi",
-			password = "secret"
-		),
-		isInEditingMode = true,
-		toggleEditingMode = {  },
-		updateItem = { _, _, _ ->  },
-		textFieldSsid = "new-asdkoda-wifi",
-		textFieldPassword = "new-secret",
-		deleteItem = {  },
-		shareImage = { _, _ ->  }
-	)
-}
-
-@Composable
-private fun AnimatedTextFields(
-	ssid: String,
-	updateSsid: (String) -> Unit,
-	password: String,
-	updatePassword: (String) -> Unit,
-	isInEditingMode: Boolean,
-	modifier: Modifier = Modifier
-) {
-	AnimatedVisibility(
-		visible = isInEditingMode,
-		enter = slideInVertically(
-			initialOffsetY = { -it },
-			animationSpec = tween(
-				durationMillis = 150,
-				easing = EaseOut
-			)
-		),
-		exit = slideOutVertically(
-			targetOffsetY = { -it },
-			animationSpec = tween(
-				durationMillis = 150,
-				easing = EaseOut
-			)
-		),
-		modifier = modifier
-	) {
-		TextFields(
-			ssid = ssid,
-			updateSsid = updateSsid,
-			password = password,
-			updatePassword = updatePassword
-		)
-	}
-}
-
-@Preview(
-	showBackground = true,
-	uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun AnimatedTextFieldsPreview() {
-	AnimatedTextFields(
-		ssid = "asdkoda-wifi",
-		updateSsid = {  },
-		password = "secret",
-		updatePassword = {  },
-		isInEditingMode = true
-	)
-}
-
-@Composable
-private fun ButtonsRow(
-	item: ItemUiState,
-	modifier: Modifier = Modifier,
-	isInEditingMode: Boolean = false,
-	toggleEditingMode: () -> Unit,
-	updateItem: (ItemUiState, String, String) -> Unit,
-	textFieldSsid: String,
-	textFieldPassword: String,
-	deleteItem: (ItemUiState) -> Unit,
-	shareImage: (Context, ItemUiState) -> Unit
-) {
-	val context = LocalContext.current
-	Row(
-		horizontalArrangement = Arrangement.SpaceBetween,
-		modifier = modifier.width(250.dp)
-	) {
-		ElevatedButton(onClick = {
-				val isDifferent: Boolean = item.ssid != textFieldSsid || item.password != textFieldPassword
-				if (isInEditingMode && isDifferent) {
-					updateItem(item, textFieldSsid, textFieldPassword)
-				}
-				toggleEditingMode()
-		}) {
-			Icon(
-				imageVector = if (isInEditingMode) Icons.Default.Check else Icons.Default.Edit,
-				contentDescription = null
-			)
-		}
-		ElevatedButton(onClick = {
-			if (isInEditingMode) {
-				toggleEditingMode()
-			}
-			deleteItem(item)
-		}) {
-			Icon(
-				imageVector = Icons.Default.Delete,
-				contentDescription = null
-			)
-		}
-		ElevatedButton(onClick = {
-			shareImage(context, item)
-		}) {
-			Icon(
-				imageVector = Icons.Default.Share,
-				contentDescription = null
-			)
-		}
-	}
-}
-
-@Preview(
-	showBackground = true,
-	uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun ButtonsRowPreview() {
-	ButtonsRow(
-		item = ItemUiState(
-			ssid = "asdkoda-wifi",
-			password = "secret"
-		),
-		toggleEditingMode = {  },
-		updateItem = { _, _, _ ->  },
-		textFieldSsid = "new-asdkoda-wifi",
-		textFieldPassword = "new-secret",
-		deleteItem = {  },
-		shareImage = { _, _ ->  }
-	)
-}
-
-@Composable
-private fun QRCodeImage(
-	image: Bitmap,
-	modifier: Modifier = Modifier,
-	size: Dp = 300.dp,
-	cornerRadius: Dp = 70.dp,
-	borderWidth: Dp = 15.dp,
-	colors: List<Color> = listOf(Red, Orange)
-) {
-	val transition = rememberInfiniteTransition()
-	val angle by transition.animateFloat(
-		initialValue = 0f,
-		targetValue = 360f,
-		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 10000),
-			repeatMode = RepeatMode.Restart
-		),
-		label = "gradientAngle"
-	)
-	Box(
-		modifier = modifier
-			.size(size)
-			.clip(RoundedCornerShape(cornerRadius))
-			.gradientBackground(
-				colors = colors,
-				angle = angle
-			)
-			.padding(borderWidth)
-	) {
-		Image(
-			bitmap = image.asImageBitmap(),
-			contentDescription = null,
-			contentScale = ContentScale.Fit,
 			modifier = Modifier
-				.clip(RoundedCornerShape(cornerRadius - borderWidth))
-				.fillMaxSize()
+				.align(Alignment.TopCenter)
+				.padding(24.dp)
 		)
-	}
-}
-
-@Preview(
-	showBackground = true,
-	uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun QRCodeImagePreview() {
-	QRCodeImage(
-		image = ItemUiState(
-			ssid = "asdkoda-wifi",
-			password = "secret"
-		).toBitmap()
-	)
-}
-
-@Composable
-private fun DotIndicators(
-	itemsCount: Int,
-	currentPageIndex: Int,
-	modifier: Modifier = Modifier
-) {
-	Row(modifier = modifier.padding(20.dp)) {
-		val startIndex = max(0, min(currentPageIndex-2, itemsCount-5))
-		val endIndex = min(itemsCount-1, max(currentPageIndex+2, 4))
-		(startIndex..endIndex).forEach {
-			val color = animateColorAsState(
-				targetValue = if (it == currentPageIndex) Color.White else Color.Gray,
-				animationSpec = tween(
-					durationMillis = 300,
-					easing = LinearEasing
-				),
-				label = "pagerIndicatorColor"
-			)
-			val width = animateDpAsState(
-				targetValue = if (it == currentPageIndex) 18.dp else 6.dp,
-				animationSpec = tween(
-					durationMillis = 150,
-					easing = LinearEasing
-				),
-				label = "pagerIndicatorWidth"
-
-			)
-			Box(
-				modifier = Modifier
-					.padding(horizontal = 6.dp)
-					.size(height = 6.dp, width = width.value)
-					.clip(CircleShape)
-					.background(color.value)
-			)
-		}
-	}
-}
-
-@Preview(
-	showBackground = true,
-	uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun DotIndicatorsPreview() {
-	DotIndicators(
-		itemsCount = 5,
-		currentPageIndex = 3
-	)
-}
-
-@Composable
-private fun FloatingActionButtons(
-	itemsCount: Int,
-	navigateToReorderItems: () -> Unit,
-	navigateToAddItem: () -> Unit,
-	modifier: Modifier = Modifier,
-) {
-	Column(modifier = modifier) {
-		AnimatedVisibility(
-			visible = itemsCount > 1,
-			enter = slideInHorizontally { it },
-			exit = slideOutHorizontally { it }
+		val paddingTop = animateDpAsState(
+			targetValue = if (isInEditingMode) 200.dp else 0.dp,
+			animationSpec = tween(
+				durationMillis = 150,
+				easing = EaseOut
+			),
+			label = "paddingTop"
+		)
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			modifier = Modifier
+				.padding(top = paddingTop.value)
+				.fillMaxSize()
+				.wrapContentSize(Alignment.Center)
 		) {
-			FloatingActionButton(
-				onClick = navigateToReorderItems,
-				modifier = Modifier.padding(end = 24.dp, bottom = 24.dp)
-			) {
-				Icon(
-					imageVector = Icons.Default.Reorder,
-					contentDescription = null
+			val infiniteTransition = rememberInfiniteTransition()
+			val shadowBlurRadius = infiniteTransition.animateFloat(
+				initialValue = 30f,
+				targetValue = 45f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(durationMillis = 5000),
+					repeatMode = RepeatMode.Reverse
+				),
+				label = "shadowBlur"
+			)
+			val cornerRadius: Dp = 75.dp
+			BoxWithConstraints {
+				val size = min(maxWidth, maxHeight)
+				val sizeFraction = if (size < 500.dp) 0.75f else 0.5f
+				QRCodeImage(
+					image = item.toBitmap(),
+					cornerRadius = cornerRadius,
+					modifier = Modifier
+						.size(size * sizeFraction)
+						.advancedShadow(
+							color = Red,
+							alpha = 0.75f,
+							cornersRadius = cornerRadius,
+							shadowBlurRadius = shadowBlurRadius.value.dp
+						)
 				)
 			}
-		}
-		FloatingActionButton(
-			onClick = navigateToAddItem,
-			modifier = Modifier.padding(end = 24.dp, bottom = 24.dp)
-		) {
-			Icon(
-				imageVector = Icons.Default.Add,
-				contentDescription = null
+			Text(
+				text = item.ssid,
+				fontSize = 24.sp,
+				fontWeight = FontWeight.Medium,
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+				modifier = Modifier.padding(28.dp)
+			)
+			ElevatedButtonsRow(
+				item = item,
+				isInEditingMode = isInEditingMode,
+				toggleEditingMode = toggleEditingMode,
+				updateItem = updateItem,
+				textFieldSsid = ssid,
+				textFieldPassword = password,
+				deleteItem = deleteItem,
+				shareImage = shareImage
 			)
 		}
 	}
