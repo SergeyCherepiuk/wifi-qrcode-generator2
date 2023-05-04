@@ -20,4 +20,6 @@ class MainActivity : ComponentActivity() {
 
 // TODO: Improve dots indicator for pager
 // TODO: Create "no items" screen
-// TODO: Change implementation of navigation using Compose Navigation
+// TODO: Change implementation of navigation using Compose Destinations
+// TODO: Write UI and unit tests
+// TODO: Make  UI responsive

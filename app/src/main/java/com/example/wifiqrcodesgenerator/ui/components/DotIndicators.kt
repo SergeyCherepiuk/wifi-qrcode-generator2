@@ -30,7 +30,7 @@ fun DotIndicators(
     Row(modifier = modifier) {
         val startIndex = getStartIndex(currentPageIndex, itemsCount)
         val endIndex = getEndIndex(currentPageIndex, itemsCount)
-        (startIndex..endIndex).forEach {
+        (startIndex until endIndex).forEach {
             val color = animateColorAsState(
                 targetValue = if (it == currentPageIndex) Color.White else Color.Gray,
                 animationSpec = tween(

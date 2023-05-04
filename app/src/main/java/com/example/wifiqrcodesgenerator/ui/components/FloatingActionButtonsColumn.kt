@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.wifiqrcodesgenerator.ui.theme.WifiQRCodesGeneratorTheme
@@ -33,14 +34,20 @@ fun FloatingActionButtonsColumn(
             enter = slideInHorizontally { it },
             exit = slideOutHorizontally { it }
         ) {
-            FloatingActionButton(onClick = navigateToReorderItems,) {
+            FloatingActionButton(
+                onClick = navigateToReorderItems,
+                modifier = Modifier.testTag("Navigate to \"reorder items\" screen")
+            ) {
                 Icon(
                     imageVector = Icons.Default.Reorder,
                     contentDescription = null
                 )
             }
         }
-        FloatingActionButton(onClick = navigateToAddItem) {
+        FloatingActionButton(
+            onClick = navigateToAddItem,
+            modifier = Modifier.testTag("Navigate to \"add item\" screen")
+        ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = null

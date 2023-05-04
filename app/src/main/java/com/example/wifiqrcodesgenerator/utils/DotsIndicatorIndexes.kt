@@ -5,5 +5,5 @@ fun getStartIndex(currentPageIndex: Int, itemsCount: Int): Int {
 }
 
 fun getEndIndex(currentPageIndex: Int, itemsCount: Int): Int {
-    return Integer.min(itemsCount-1, Integer.max(currentPageIndex+2, 4))
+    return Integer.min(itemsCount, Integer.max(currentPageIndex+3, 5))
 }

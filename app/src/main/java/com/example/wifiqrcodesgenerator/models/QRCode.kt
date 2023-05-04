@@ -8,8 +8,8 @@ import com.example.wifiqrcodesgenerator.utils.generateBitmap
 @Entity(tableName = "qrcode")
 data class QRCode(
     @PrimaryKey(autoGenerate = true) var id: Int? = null,
-    var ssid: String,
-    var password: String,
+    val ssid: String,
+    val password: String,
 )
 
 fun QRCode.toBitmap(): Bitmap = generateBitmap(this.ssid, this.password)
