@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.example.wifiqrcodesgenerator.data.ItemsRepositoryImpl
+import com.example.wifiqrcodesgenerator.database.AppDatabase
 import com.example.wifiqrcodesgenerator.ui.itemslist.ItemsListViewModel
 import com.example.wifiqrcodesgenerator.ui.itemslist.addItem
 import com.example.wifiqrcodesgenerator.ui.itemslist.itemsList
@@ -17,7 +19,9 @@ import com.example.wifiqrcodesgenerator.ui.theme.WifiQRCodesGeneratorTheme
 @Composable
 fun NavGraph(navController: NavHostController) {
 	val context = LocalContext.current
-	val itemsListViewModel = ItemsListViewModel(context.applicationContext)
+	val itemsListViewModel = ItemsListViewModel(
+		ItemsRepositoryImpl(AppDatabase.getInstance(context))
+	)
 	WifiQRCodesGeneratorTheme {
 		Surface(
 			modifier = Modifier.fillMaxSize(),

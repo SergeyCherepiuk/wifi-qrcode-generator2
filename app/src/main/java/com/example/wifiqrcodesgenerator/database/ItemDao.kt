@@ -2,11 +2,12 @@ package com.example.wifiqrcodesgenerator.database
 
 import androidx.room.*
 import com.example.wifiqrcodesgenerator.models.QRCode
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
 	@Query("SELECT * FROM qrcode")
-	suspend fun getItems(): List<QRCode>
+	fun getItems(): Flow<List<QRCode>>
 
 	@Insert
 	suspend fun addItem(item: QRCode)

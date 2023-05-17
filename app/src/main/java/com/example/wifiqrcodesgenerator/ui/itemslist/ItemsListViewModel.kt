@@ -9,20 +9,23 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.wifiqrcodesgenerator.database.AppDatabase
+import com.example.wifiqrcodesgenerator.data.ItemsRepository
 import com.example.wifiqrcodesgenerator.models.QRCode
 import com.example.wifiqrcodesgenerator.utils.generateBitmap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class ItemsListViewModel(context: Context) : ViewModel() {
-	private val database: AppDatabase = AppDatabase.getInstance(context)
+class ItemsListViewModel(
+	private val itemsRepository: ItemsRepository
+) : ViewModel() {
 	private val _uiState = MutableStateFlow(ItemsListUiState())
 	val uiState: StateFlow<ItemsListUiState> = _uiState.asStateFlow()
 
@@ -31,10 +34,14 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 			isLoading = true
 		) }
 		viewModelScope.launch {
-			_uiState.update { it.copy(
-				items = database.itemDao().getItems(),
-				isLoading = false
-			) }
+			itemsRepository.items
+				.flowOn(Dispatchers.IO)
+				.collect { items ->
+					_uiState.update { it.copy(
+						items = items,
+						isLoading = false
+					) }
+				}
 		}
 	}
 
@@ -44,31 +51,23 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 			password = password.trim()
 		)
 		viewModelScope.launch {
-			database.itemDao().addItem(item)
-			_uiState.update { it.copy(
-				items = database.itemDao().getItems()
-			) }
+			itemsRepository.addItem(item)
 		}
 	}
 
 	fun updateItem(item: QRCode, ssid: String, password: String) {
+		val updatedItem = item.copy(
+			ssid = ssid.trim(),
+			password = password.trim()
+		)
 		viewModelScope.launch {
-			database.itemDao().updateItem(item.copy(
-				ssid = ssid.trim(),
-				password = password.trim()
-			))
-			_uiState.update { it.copy(
-				items = database.itemDao().getItems()
-			) }
+			itemsRepository.updateItem(updatedItem)
 		}
 	}
 
 	fun deleteItem(item: QRCode) {
 		viewModelScope.launch {
-			database.itemDao().deleteItem(item)
-			_uiState.update { it.copy(
-				items = database.itemDao().getItems()
-			) }
+			itemsRepository.deleteItem(item)
 		}
 	}
 
@@ -81,13 +80,10 @@ class ItemsListViewModel(context: Context) : ViewModel() {
 		) }
 	}
 
-	fun submitReorderItems() {
+	fun submitReorderedItems() {
 		val items = _uiState.value.items.toMutableList()
 		viewModelScope.launch {
-			database.itemDao().updateItems(items)
-			_uiState.update { it.copy(
-				items = database.itemDao().getItems()
-			) }
+			itemsRepository.updateItems(items)
 		}
 	}
 

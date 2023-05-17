@@ -40,7 +40,7 @@ fun NavGraphBuilder.reorderItems(
 		ReorderItemsScreen(
 			uiState = uiState,
 			reorderItems = viewModel::reorderItems,
-			submitReorderItems = viewModel::submitReorderItems,
+			submitReorderItems = viewModel::submitReorderedItems,
 			navigateUp = navController::navigateUp
 		)
 	}
