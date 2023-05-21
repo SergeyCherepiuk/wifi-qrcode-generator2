@@ -7,6 +7,8 @@ import androidx.test.filters.SmallTest
 import com.example.wifiqrcodesgenerator.database.AppDatabase
 import com.example.wifiqrcodesgenerator.database.ItemDao
 import com.example.wifiqrcodesgenerator.models.QRCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -35,14 +37,22 @@ class ItemDaoTests {
             QRCode(id = 2, ssid = "sample-ssid2", password = "sample-password2"),
         )
         items.forEach { item -> itemDao.addItem(item) }
-        assert(itemDao.getItems() == items)
+        itemDao.getItems()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                assert(it == items)
+            }
     }
 
     @Test
     fun addItemTest() = runBlocking {
         val item = QRCode(id = 1, ssid = "sample-ssid", password = "sample-password")
         itemDao.addItem(item)
-        assert(itemDao.getItems().contains(item))
+        itemDao.getItems()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                assert(it.contains(item))
+            }
     }
 
     @Test
@@ -51,9 +61,13 @@ class ItemDaoTests {
         itemDao.addItem(item)
         val updatedItem = QRCode(id = 1, ssid = "new-sample-ssid", password = "new-sample-password")
         itemDao.updateItem(updatedItem)
-        val notContainsOldItem = itemDao.getItems().contains(updatedItem)
-        val containsUpdatedItem = !itemDao.getItems().contains(item)
-        assert(notContainsOldItem && containsUpdatedItem)
+        itemDao.getItems()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                val notContainsOldItem = it.contains(updatedItem)
+                val containsUpdatedItem = !it.contains(item)
+                assert(notContainsOldItem && containsUpdatedItem)
+            }
     }
 
     @Test
@@ -67,9 +81,13 @@ class ItemDaoTests {
             item.copy(ssid = "new-${item.ssid}", password = "new-${item.password}")
         }
         itemDao.updateItems(updatedItems)
-        val notContainsOldItems = items.all { !itemDao.getItems().contains(it) }
-        val containsUpdatedItems = updatedItems.all { itemDao.getItems().contains(it) }
-        assert(notContainsOldItems && containsUpdatedItems)
+        itemDao.getItems()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                val notContainsOldItems = items.all { allItems -> !it.contains(allItems) }
+                val containsUpdatedItems = updatedItems.all { allItems -> it.contains(allItems) }
+                assert(notContainsOldItems && containsUpdatedItems)
+            }
     }
 
     @Test
@@ -77,7 +95,11 @@ class ItemDaoTests {
         val item = QRCode(id = 1, ssid = "sample-ssid", password = "sample-password")
         itemDao.addItem(item)
         itemDao.deleteItem(item)
-        assert(!itemDao.getItems().contains(item))
+        itemDao.getItems()
+            .flowOn(Dispatchers.IO)
+            .collect {
+                assert(!it.contains(item))
+            }
     }
 
     @After
