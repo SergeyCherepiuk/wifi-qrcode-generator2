@@ -73,11 +73,8 @@ fun ItemsListScreen(
 	modifier: Modifier = Modifier
 ) {
 	Box(modifier = modifier) {
-		val pagerState = rememberPagerState()
-		HorizontalPager(
-			pageCount = uiState.items.size,
-			state = pagerState
-		) { pageIndex ->
+		val pagerState = rememberPagerState { uiState.items.size }
+		HorizontalPager(state = pagerState) { pageIndex ->
 			QRCodePage(
 				item = uiState.items[pageIndex],
 				updateItem = updateItem,
